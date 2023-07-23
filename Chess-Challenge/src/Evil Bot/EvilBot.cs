@@ -1,54 +1,86 @@
 ﻿using ChessChallenge.API;
 using System;
+using System.Numerics;
+using System.Collections.Generic;
+using System.Linq;
 
-namespace ChessChallenge.Example
+// This is the FIrst bot I made
+public class EvilBot : IChessBot
 {
-    // A simple bot that can spot mate in one, and always captures the most valuable piece it can.
-    // Plays randomly otherwise.
-    public class EvilBot : IChessBot
+    public Move Think(Board board, Timer timer)
     {
+        Random rng = new();
+
+        int moveToPlay = -1;
+        int highMoveValue = 0;
         // Piece values: null, pawn, knight, bishop, rook, queen, king
         int[] pieceValues = { 0, 100, 300, 300, 500, 900, 10000 };
 
-        public Move Think(Board board, Timer timer)
+        Move[] moves = board.GetLegalMoves(false);
+
+        for (int i = 0; i < moves.Length; i++)
         {
-            Move[] allMoves = board.GetLegalMoves();
+            int moveValue = 0;
 
-            // Pick a random move to play if nothing better is found
-            Random rng = new();
-            Move moveToPlay = allMoves[rng.Next(allMoves.Length)];
-            int highestValueCapture = 0;
-
-            foreach (Move move in allMoves)
+            // Captures
+            if (moves[i].IsCapture)
             {
-                // Always play checkmate in one
-                if (MoveIsCheckmate(board, move))
-                {
-                    moveToPlay = move;
-                    break;
-                }
-
-                // Find highest value capture
-                Piece capturedPiece = board.GetPiece(move.TargetSquare);
+                Piece capturedPiece = board.GetPiece(moves[i].TargetSquare);
                 int capturedPieceValue = pieceValues[(int)capturedPiece.PieceType];
 
-                if (capturedPieceValue > highestValueCapture)
-                {
-                    moveToPlay = move;
-                    highestValueCapture = capturedPieceValue;
-                }
+                moveValue += capturedPieceValue;
             }
 
-            return moveToPlay;
-        }
+            // Checks and Checkmates
+            board.MakeMove(moves[i]);
 
-        // Test if this move gives checkmate
-        bool MoveIsCheckmate(Board board, Move move)
-        {
-            board.MakeMove(move);
-            bool isMate = board.IsInCheckmate();
-            board.UndoMove(move);
-            return isMate;
+            if (board.IsInCheckmate())
+            {
+                moveValue += 100000000;
+                board.UndoMove(moves[i]);
+            }
+            else if (board.IsInCheck())
+            {
+                moveValue += 100;
+                board.UndoMove(moves[i]);
+            }
+            else
+            {
+                board.UndoMove(moves[i]);
+            }
+
+            // Takesies Backsies
+            board.MakeMove(moves[i]);
+            Move[] enemyTaksiesMoves = board.GetLegalMoves(true);
+
+            int highEnemiesTaksies = 0;
+
+            for (int enemyIndex = 0; enemyIndex < enemyTaksiesMoves.Length; enemyIndex++)
+            {
+                Piece capturedPiece = board.GetPiece(enemyTaksiesMoves[enemyIndex].TargetSquare);
+                int currentEmemiesTaksies = pieceValues[(int)capturedPiece.PieceType] * 3 / 2;
+                if (currentEmemiesTaksies > highEnemiesTaksies)
+                {
+                    highEnemiesTaksies = currentEmemiesTaksies;
+                }
+            }
+            board.UndoMove(moves[i]);
+            moveValue -= highEnemiesTaksies;
+
+            if (moveValue > highMoveValue)
+            {
+                moveToPlay = i;
+                highMoveValue = moveValue;
+            }
         }
+        if (moveToPlay == -1)
+        {
+            moveToPlay = rng.Next(moves.Length);
+        }
+        else
+        {
+
+        }
+        return moves[moveToPlay];
     }
 }
