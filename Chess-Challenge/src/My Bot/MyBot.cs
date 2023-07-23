@@ -37,7 +37,7 @@ public class MyBot : IChessBot
         int score = 0;
         
         // DEPTH
-        int depth = 5;
+        int depth = 4;
         int max = -999999999;
         Move bestMove = moves[moves.Length - 1];
 
