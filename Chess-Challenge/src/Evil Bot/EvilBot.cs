@@ -38,8 +38,8 @@ public class EvilBot : IChessBot
         Move[] moves = board.GetLegalMoves(false);
         int score = 0;
 
-        // DEPTH
-        int depth = 2;
+        // DEPTH EVEN NUMBERS ONLY
+        int depth = 4;
         int max = -999999999;
         Move bestMove = moves[moves.Length - 1];
 

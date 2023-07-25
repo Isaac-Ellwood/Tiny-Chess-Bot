@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 
-// This is the NegaMax Bot
+// This is the NegaMax Alpha Beta Bot
 
 public class MyBot : IChessBot
 {
@@ -38,7 +38,7 @@ public class MyBot : IChessBot
         Move[] moves = board.GetLegalMoves(false);
         int score = 0;
 
-        // DEPTH
+        // DEPTH EVEN NUMBERS ONLY
         int depth = 2;
         int max = -999999999;
         Move bestMove = moves[moves.Length - 1];
