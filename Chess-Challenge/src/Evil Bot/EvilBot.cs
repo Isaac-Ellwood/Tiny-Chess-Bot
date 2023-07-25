@@ -39,7 +39,7 @@ public class EvilBot : IChessBot
         int score = 0;
 
         // DEPTH
-        int depth = 4;
+        int depth = 2;
         int max = -999999999;
         Move bestMove = moves[moves.Length - 1];
 
@@ -55,7 +55,7 @@ public class EvilBot : IChessBot
             }
             board.UndoMove(moves[i]);
         }
-
+        Console.WriteLine("Nega: "+max);
         return bestMove;
 
         int negaMax(int depth)

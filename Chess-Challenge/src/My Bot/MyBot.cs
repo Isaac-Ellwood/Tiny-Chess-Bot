@@ -28,18 +28,18 @@ public class MyBot : IChessBot
         int who2move;
         if (board.IsWhiteToMove)
         {
-            who2move = 1;
+            who2move = -1;
         }
         else
         {
-            who2move = -1;
+            who2move = 1;
         }
 
         Move[] moves = board.GetLegalMoves(false);
         int score = 0;
 
         // DEPTH
-        int depth = 4;
+        int depth = 2;
         int max = -999999999;
         Move bestMove = moves[moves.Length - 1];
 
@@ -47,41 +47,47 @@ public class MyBot : IChessBot
         {
             // Make move, Recursion, Undo move
             board.MakeMove(moves[i]);
-            score = -negaMax(depth - 1);
+            score = -alphaBeta(-999999999, 999999999, depth);
+            board.UndoMove(moves[i]);
             if (score >= max)
             {
                 max = score;
                 bestMove = moves[i];
             }
-            board.UndoMove(moves[i]);
         }
-
+        Console.WriteLine("AlphaBaeta: "+max);
         return bestMove;
 
-        int negaMax(int depth)
-        {
-            // end of the tree
-            if (depth == 0) return evaluate();
-
-            int max = -999999999;
-            Move[] moves = board.GetLegalMoves(false);
-            for (int i = 0; i < moves.Length; i++)
-            {
-                // Make move, Recursion, Undo move
-                board.MakeMove(moves[i]);
-                score = -negaMax(depth - 1);
-                if (score >= max) max = score;
-                board.UndoMove(moves[i]);
-            }
-            return max;
-        }
+        // Regular NegaMax
+        //int negaMax(int depth)
+        //{
+        //    // end of the tree
+        //    if (depth == 0) return Evaluate();
+        //
+        //    int max = -999999999;
+        //    Move[] moves = board.GetLegalMoves(false);
+        //    for (int i = 0; i < moves.Length; i++)
+        //    {
+        //        // Make move, Recursion, Undo move
+        //        board.MakeMove(moves[i]);
+        //        score = -negaMax(depth - 1);
+        //        if (score >= max) max = score;
+        //        board.UndoMove(moves[i]);
+        //    }
+        //    return max;
+        //}
 
         int alphaBeta(int alpha, int beta, int depthleft)
         {
-            if (depthleft == 0) return quiesce(alpha, beta);
-            for (all moves)
+            if (depthleft == 0) return Evaluate();
+            // Quiesce search option
+            // if (depthleft == 0) return Quiesce(alpha, beta);
+            Move[] moves = board.GetLegalMoves(false);
+            for (int i = 0; i < moves.Length; i++)
             {
+                board.MakeMove(moves[i]);
                 score = -alphaBeta(-beta, -alpha, depthleft - 1);
+                board.UndoMove(moves[i]);
                 if (score >= beta)
                     return beta;   //  fail hard beta-cutoff
                 if (score > alpha)
@@ -90,28 +96,28 @@ public class MyBot : IChessBot
             return alpha;
         }
 
-        int Quiesce(int alpha, int beta)
-        {
-            int stand_pat = Evaluate();
-            if (stand_pat >= beta)
-                return beta;
-            if (alpha < stand_pat)
-                alpha = stand_pat;
+        //int Quiesce(int alpha, int beta)
+        //{
+        //    int stand_pat = Evaluate();
+        //    if (stand_pat >= beta)
+        //        return beta;
+        //    if (alpha < stand_pat)
+        //        alpha = stand_pat;
+        //
+        //    until(every_capture_has_been_examined)  {
+        //        MakeCapture();
+        //        score = -Quiesce(-beta, -alpha);
+        //        TakeBackMove();
+        //
+        //        if (score >= beta)
+        //            return beta;
+        //        if (score > alpha)
+        //            alpha = score;
+        //    }
+        //    return alpha;
+        //}
 
-            until(every_capture_has_been_examined)  {
-                MakeCapture();
-                score = -Quiesce(-beta, -alpha);
-                TakeBackMove();
-
-                if (score >= beta)
-                    return beta;
-                if (score > alpha)
-                    alpha = score;
-            }
-            return alpha;
-        }
-
-        int evaluate()
+        int Evaluate()
         {
             int score = 0;
 
