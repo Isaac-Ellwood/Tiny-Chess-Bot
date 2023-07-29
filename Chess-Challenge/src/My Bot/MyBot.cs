@@ -39,7 +39,7 @@ public class MyBot : IChessBot
         int score = 0;
 
         // DEPTH EVEN NUMBERS ONLY
-        int depth = 2;
+        int depth = 4;
         int max = -999999999;
         Move bestMove = moves[moves.Length - 1];
 
@@ -47,6 +47,12 @@ public class MyBot : IChessBot
         {
             // Make move, Recursion, Undo move
             board.MakeMove(moves[i]);
+            // Instant 1 move checkmate return
+            if (board.IsInCheckmate())
+            {
+                return moves[i];
+            }
+            
             score = -alphaBeta(-999999999, 999999999, depth);
             board.UndoMove(moves[i]);
             if (score >= max)
