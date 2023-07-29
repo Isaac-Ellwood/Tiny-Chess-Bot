@@ -39,7 +39,7 @@ public class MyBot : IChessBot
         int score = 0;
 
         // DEPTH EVEN NUMBERS ONLY
-        int depth = 4;
+        int depth = 2;
         int max = -999999999;
         Move bestMove = moves[moves.Length - 1];
 
@@ -85,7 +85,7 @@ public class MyBot : IChessBot
 
         int alphaBeta(int alpha, int beta, int depthleft)
         {
-            if (depthleft == 0) return Evaluate();
+            if (depthleft == 0) return Quiesce(alpha, beta);
             // Quiesce search option
             // if (depthleft == 0) return Quiesce(alpha, beta);
             Move[] moves = board.GetLegalMoves(false);
@@ -102,26 +102,28 @@ public class MyBot : IChessBot
             return alpha;
         }
 
-        //int Quiesce(int alpha, int beta)
-        //{
-        //    int stand_pat = Evaluate();
-        //    if (stand_pat >= beta)
-        //        return beta;
-        //    if (alpha < stand_pat)
-        //        alpha = stand_pat;
-        //
-        //    until(every_capture_has_been_examined)  {
-        //        MakeCapture();
-        //        score = -Quiesce(-beta, -alpha);
-        //        TakeBackMove();
-        //
-        //        if (score >= beta)
-        //            return beta;
-        //        if (score > alpha)
-        //            alpha = score;
-        //    }
-        //    return alpha;
-        //}
+        int Quiesce(int alpha, int beta)
+        {
+            int stand_pat = Evaluate();
+            if (stand_pat >= beta)
+                return beta;
+            if (alpha < stand_pat)
+                alpha = stand_pat;
+
+            Move[] moves = board.GetLegalMoves(true);
+            for (int i = 0; i < moves.Length; i++)
+            {
+                board.MakeMove(moves[i]);
+                score = -Quiesce(-beta, -alpha);
+                board.UndoMove(moves[i]);
+
+                if (score >= beta)
+                    return beta;
+                if (score > alpha)
+                    alpha = score;
+            }
+            return alpha;
+        }
 
         int Evaluate()
         {
