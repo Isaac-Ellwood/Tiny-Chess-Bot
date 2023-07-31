@@ -12,19 +12,21 @@ public class MyBot : IChessBot
     public Move Think(Board board, Timer timer)
     {
         // Piece values: null, pawn, knight, bishop, rook, queen, king
-        int[] pieceValues = { 0, 100, 300, 300, 500, 900, 10000, -0, -100, -300, -300, -500, -900, -10000 };
-
+        int[] pieceValues = { 0, 100, 300, 300, 500, 900, 10000};
+        // Every square on the board
         List<string> chessSquares = new List<string>
-            {
-                "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
-                "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
-                "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3",
-                "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4",
-                "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5",
-                "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6",
-                "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7",
-                "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8"
-            };
+        {
+            "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
+            "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
+            "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3",
+            "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4",
+            "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5",
+            "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6",
+            "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7",
+            "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8"
+        };
+
+        //
         int who2move;
         if (board.IsWhiteToMove)
         {
@@ -35,25 +37,26 @@ public class MyBot : IChessBot
             who2move = 1;
         }
 
-        Move[] moves = board.GetLegalMoves(false);
         int score = 0;
+        // Max (leave it alone)
+        int max = -999999999;
 
         // DEPTH EVEN NUMBERS ONLY
-        int depth = 2;
-        int max = -999999999;
-        Move bestMove = moves[moves.Length - 1];
+        int depth = 4;
+        int quiesceDepth = 2;
+
+        Move[] moves = board.GetLegalMoves(false);
+
+        // Selects random move if all same value
+        Random rng = new Random();
+        Move bestMove = moves[rng.Next(moves.Length)];
 
         for (int i = 0; i < moves.Length; i++)
         {
             // Make move, Recursion, Undo move
             board.MakeMove(moves[i]);
-            // Instant 1 move checkmate return
-            if (board.IsInCheckmate())
-            {
-                return moves[i];
-            }
             
-            score = -alphaBeta(-999999999, 999999999, depth);
+            score = -alphaBeta(max, 999999999, depth);
             board.UndoMove(moves[i]);
             if (score >= max)
             {
@@ -61,31 +64,13 @@ public class MyBot : IChessBot
                 bestMove = moves[i];
             }
         }
-        Console.WriteLine("AlphaBaeta: "+max);
+        Console.WriteLine("Mine:");
+        Console.WriteLine(timer.MillisecondsElapsedThisTurn);
         return bestMove;
-
-        // Regular NegaMax
-        //int negaMax(int depth)
-        //{
-        //    // end of the tree
-        //    if (depth == 0) return Evaluate();
-        //
-        //    int max = -999999999;
-        //    Move[] moves = board.GetLegalMoves(false);
-        //    for (int i = 0; i < moves.Length; i++)
-        //    {
-        //        // Make move, Recursion, Undo move
-        //        board.MakeMove(moves[i]);
-        //        score = -negaMax(depth - 1);
-        //        if (score >= max) max = score;
-        //        board.UndoMove(moves[i]);
-        //    }
-        //    return max;
-        //}
 
         int alphaBeta(int alpha, int beta, int depthleft)
         {
-            if (depthleft == 0) return Quiesce(alpha, beta);
+            if (depthleft == 0) return Quiesce(alpha, beta, quiesceDepth);
             // Quiesce search option
             // if (depthleft == 0) return Quiesce(alpha, beta);
             Move[] moves = board.GetLegalMoves(false);
@@ -102,8 +87,9 @@ public class MyBot : IChessBot
             return alpha;
         }
 
-        int Quiesce(int alpha, int beta)
+        int Quiesce(int alpha, int beta, int maxDepthLeft)
         {
+            if (maxDepthLeft == 0) return Evaluate();
             int stand_pat = Evaluate();
             if (stand_pat >= beta)
                 return beta;
@@ -114,7 +100,7 @@ public class MyBot : IChessBot
             for (int i = 0; i < moves.Length; i++)
             {
                 board.MakeMove(moves[i]);
-                score = -Quiesce(-beta, -alpha);
+                score = -Quiesce(-beta, -alpha, maxDepthLeft - 1);
                 board.UndoMove(moves[i]);
 
                 if (score >= beta)

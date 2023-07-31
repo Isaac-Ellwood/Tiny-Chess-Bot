@@ -12,7 +12,7 @@ public class EvilBot : IChessBot
     public Move Think(Board board, Timer timer)
     {
         // Piece values: null, pawn, knight, bishop, rook, queen, king
-        int[] pieceValues = { 0, 100, 300, 300, 500, 900, 10000, -0, -100, -300, -300, -500, -900, -10000 };
+        int[] pieceValues = { 0, 100, 300, 300, 500, 900, 10000 };
 
         List<string> chessSquares = new List<string>
             {
@@ -39,7 +39,7 @@ public class EvilBot : IChessBot
         int score = 0;
 
         // DEPTH EVEN NUMBERS ONLY
-        int depth = 2;
+        int depth = 4;
         int max = -999999999;
         Move bestMove = moves[moves.Length - 1];
 
@@ -53,7 +53,7 @@ public class EvilBot : IChessBot
                 return moves[i];
             }
 
-            score = -alphaBeta(-999999999, 999999999, depth);
+            score = -alphaBeta(max, 999999999, depth);
             board.UndoMove(moves[i]);
             if (score >= max)
             {
@@ -61,7 +61,8 @@ public class EvilBot : IChessBot
                 bestMove = moves[i];
             }
         }
-        Console.WriteLine("AlphaBaeta: " + max);
+        Console.WriteLine("Evil");
+        Console.WriteLine(timer.MillisecondsElapsedThisTurn);
         return bestMove;
 
         // Regular NegaMax
@@ -102,8 +103,9 @@ public class EvilBot : IChessBot
             return alpha;
         }
 
-        int Quiesce(int alpha, int beta)
+        int Quiesce(int alpha, int beta, int maxDepthLeft)
         {
+            if (maxDepthLeft == 0) return Evaluate();
             int stand_pat = Evaluate();
             if (stand_pat >= beta)
                 return beta;
@@ -114,7 +116,7 @@ public class EvilBot : IChessBot
             for (int i = 0; i < moves.Length; i++)
             {
                 board.MakeMove(moves[i]);
-                score = -Quiesce(-beta, -alpha);
+                score = -Quiesce(-beta, -alpha, maxDepthLeft - 1);
                 board.UndoMove(moves[i]);
 
                 if (score >= beta)
