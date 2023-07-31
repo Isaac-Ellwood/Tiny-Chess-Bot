@@ -3,7 +3,6 @@ using System;
 using System.Numerics;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 // This is the NegaMax Alpha Beta Bot
 
@@ -12,7 +11,7 @@ public class MyBot : IChessBot
     public Move Think(Board board, Timer timer)
     {
         // Piece values: null, pawn, knight, bishop, rook, queen, king
-        int[] pieceValues = { 0, 100, 300, 300, 500, 900, 10000};
+        int[] pieceValues = { 0, 100, 300, 300, 500, 900, 10000 };
         // Every square on the board
         List<string> chessSquares = new List<string>
         {
@@ -26,9 +25,8 @@ public class MyBot : IChessBot
             "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8"
         };
 
-        //
+        // 
         int who2move;
-        bool whoToMove = true;
         if (board.IsWhiteToMove)
         {
             who2move = -1;
@@ -38,13 +36,15 @@ public class MyBot : IChessBot
             who2move = 1;
         }
 
-        int score = 0;
+        // Why did I set this to zero??
+        int score;
+
         // Max (leave it alone)
         int max = -999999999;
 
         // DEPTH EVEN NUMBERS ONLY
         int depth = 2;
-        int quiesceDepth = 2;
+        int quiesceDepth = 6;
 
         Move[] moves = board.GetLegalMoves(false);
 
@@ -68,7 +68,7 @@ public class MyBot : IChessBot
             // Check and checkmate bonuses
             if (board.IsInCheck())
             {
-                score += 60;
+                score += 90;
             }
 
             board.UndoMove(moves[i]);
@@ -83,6 +83,7 @@ public class MyBot : IChessBot
 
         int alphaBeta(int alpha, int beta, int depthleft)
         {
+            int score;
             if (depthleft == 0) return Quiesce(alpha, beta, quiesceDepth);
             // Quiesce search option
             // if (depthleft == 0) return Quiesce(alpha, beta);
@@ -102,6 +103,7 @@ public class MyBot : IChessBot
 
         int Quiesce(int alpha, int beta, int maxDepthLeft)
         {
+            int score;
             if (maxDepthLeft == 0) return Evaluate();
             int stand_pat = Evaluate();
             if (stand_pat >= beta)
@@ -140,30 +142,6 @@ public class MyBot : IChessBot
                 else
                 {
                     score += pieceValues[(int)piece.PieceType] * -1;
-                }
-            }
-
-            int blackWhite = -1;
-            if (board.IsWhiteToMove)
-            {
-                blackWhite = 1;
-            }
-            // Check and checkmate bonuses
-            if (board.IsInCheck())
-            {
-                score += 60 * blackWhite;
-            }
-            else if (board.IsInCheckmate())
-            {
-                score += 999999 * blackWhite;
-            }
-            else
-            {
-                // Other Bonuses
-                if (true)
-                {
-                    
-                    
                 }
             }
 

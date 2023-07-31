@@ -28,7 +28,6 @@ public class EvilBot : IChessBot
 
         //
         int who2move;
-        bool whoToMove = true;
         if (board.IsWhiteToMove)
         {
             who2move = -1;
