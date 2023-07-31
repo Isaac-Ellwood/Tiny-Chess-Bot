@@ -5,52 +5,145 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 
+// This is the NegaMax Alpha Beta Bot
 
-// A simple bot that can spot mate in one, and always captures the most valuable piece it can.
-// Plays randomly otherwise.
 public class EvilBot : IChessBot
 {
-    // Piece values: null, pawn, knight, bishop, rook, queen, king
-    int[] pieceValues = { 0, 100, 300, 300, 500, 900, 10000 };
-
     public Move Think(Board board, Timer timer)
     {
-        Move[] allMoves = board.GetLegalMoves();
-
-        // Pick a random move to play if nothing better is found
-        Random rng = new();
-        Move moveToPlay = allMoves[rng.Next(allMoves.Length)];
-        int highestValueCapture = 0;
-
-        foreach (Move move in allMoves)
+        // Piece values: null, pawn, knight, bishop, rook, queen, king
+        int[] pieceValues = { 0, 100, 300, 300, 500, 900, 10000 };
+        // Every square on the board
+        List<string> chessSquares = new List<string>
         {
-            // Always play checkmate in one
-            if (MoveIsCheckmate(board, move))
-            {
-                moveToPlay = move;
-                break;
-            }
+            "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
+            "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
+            "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3",
+            "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4",
+            "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5",
+            "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6",
+            "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7",
+            "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8"
+        };
 
-            // Find highest value capture
-            Piece capturedPiece = board.GetPiece(move.TargetSquare);
-            int capturedPieceValue = pieceValues[(int)capturedPiece.PieceType];
-
-            if (capturedPieceValue > highestValueCapture)
-            {
-                moveToPlay = move;
-                highestValueCapture = capturedPieceValue;
-            }
+        //
+        int who2move;
+        bool whoToMove = true;
+        if (board.IsWhiteToMove)
+        {
+            who2move = -1;
+        }
+        else
+        {
+            who2move = 1;
         }
 
-        return moveToPlay;
-    }
+        int score = 0;
+        // Max (leave it alone)
+        int max = -999999999;
 
-    // Test if this move gives checkmate
-    bool MoveIsCheckmate(Board board, Move move)
-    {
-        board.MakeMove(move);
-        bool isMate = board.IsInCheckmate();
-        board.UndoMove(move);
-        return isMate;
+        // DEPTH EVEN NUMBERS ONLY
+        int depth = 2;
+        int quiesceDepth = 2;
+
+        Move[] moves = board.GetLegalMoves(false);
+
+        // Selects random move if all same value
+        Random rng = new Random();
+        Move bestMove = moves[rng.Next(moves.Length)];
+
+        for (int i = 0; i < moves.Length; i++)
+        {
+            // Make move, Recursion, Undo move
+            board.MakeMove(moves[i]);
+
+            // Instant checkmate win
+            if (board.IsInCheckmate())
+            {
+                return moves[i];
+            }
+
+            score = -alphaBeta(max, 999999999, depth);
+
+            // Check and checkmate bonuses
+            if (board.IsInCheck())
+            {
+                score += 60;
+            }
+
+            board.UndoMove(moves[i]);
+
+            if (score >= max)
+            {
+                max = score;
+                bestMove = moves[i];
+            }
+        }
+        return bestMove;
+
+        int alphaBeta(int alpha, int beta, int depthleft)
+        {
+            if (depthleft == 0) return Quiesce(alpha, beta, quiesceDepth);
+            // Quiesce search option
+            // if (depthleft == 0) return Quiesce(alpha, beta);
+            Move[] moves = board.GetLegalMoves(false);
+            for (int i = 0; i < moves.Length; i++)
+            {
+                board.MakeMove(moves[i]);
+                score = -alphaBeta(-beta, -alpha, depthleft - 1);
+                board.UndoMove(moves[i]);
+                if (score >= beta)
+                    return beta;   //  fail hard beta-cutoff
+                if (score > alpha)
+                    alpha = score; // alpha acts like max in MiniMax
+            }
+            return alpha;
+        }
+
+        int Quiesce(int alpha, int beta, int maxDepthLeft)
+        {
+            if (maxDepthLeft == 0) return Evaluate();
+            int stand_pat = Evaluate();
+            if (stand_pat >= beta)
+                return beta;
+            if (alpha < stand_pat)
+                alpha = stand_pat;
+
+            Move[] moves = board.GetLegalMoves(true);
+            for (int i = 0; i < moves.Length; i++)
+            {
+                board.MakeMove(moves[i]);
+                score = -Quiesce(-beta, -alpha, maxDepthLeft - 1);
+                board.UndoMove(moves[i]);
+
+                if (score >= beta)
+                    return beta;
+                if (score > alpha)
+                    alpha = score;
+            }
+            return alpha;
+        }
+
+        int Evaluate()
+        {
+            int score = 0;
+
+            // Printing the list of chess squares
+            foreach (string square in chessSquares)
+            {
+                Square realSquare = new Square(square);
+                Piece piece = board.GetPiece(realSquare);
+                if (piece.IsWhite)
+                {
+                    score += pieceValues[(int)piece.PieceType] * 1;
+                }
+                else
+                {
+                    score += pieceValues[(int)piece.PieceType] * -1;
+                }
+            }
+
+            return score * who2move;
+        }
     }
 }

@@ -35,7 +35,6 @@ public class MyBot : IChessBot
         }
         else
         {
-            whoToMove = false;
             who2move = 1;
         }
 
@@ -57,18 +56,29 @@ public class MyBot : IChessBot
         {
             // Make move, Recursion, Undo move
             board.MakeMove(moves[i]);
-            
+
+            // Instant checkmate win
+            if (board.IsInCheckmate())
+            {
+                return moves[i];
+            }
+
             score = -alphaBeta(max, 999999999, depth);
+
+            // Check and checkmate bonuses
+            if (board.IsInCheck())
+            {
+                score += 60;
+            }
+
             board.UndoMove(moves[i]);
+
             if (score >= max)
             {
                 max = score;
                 bestMove = moves[i];
             }
         }
-        Console.WriteLine("Mine:");
-        
-        Console.WriteLine(board.GetPieceBitboard(PieceType.Knight, whoToMove));
         return bestMove;
 
         int alphaBeta(int alpha, int beta, int depthleft)
@@ -133,24 +143,29 @@ public class MyBot : IChessBot
                 }
             }
 
-            //// Check and checkmate bonuses
-            //if (board.IsInCheck())
-            //{
-            //    score -= 60;
-            //}
-            //else if (board.IsInCheckmate())
-            //{
-            //    score -= 999999;
-            //}
-            //else
-            //{
-            //    // Other Bonuses
-            //    if (true)
-            //    {
-            //        
-            //        
-            //    }
-            //}
+            int blackWhite = -1;
+            if (board.IsWhiteToMove)
+            {
+                blackWhite = 1;
+            }
+            // Check and checkmate bonuses
+            if (board.IsInCheck())
+            {
+                score += 60 * blackWhite;
+            }
+            else if (board.IsInCheckmate())
+            {
+                score += 999999 * blackWhite;
+            }
+            else
+            {
+                // Other Bonuses
+                if (true)
+                {
+                    
+                    
+                }
+            }
 
             return score * who2move;
         }
