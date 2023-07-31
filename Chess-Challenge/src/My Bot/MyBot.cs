@@ -28,12 +28,14 @@ public class MyBot : IChessBot
 
         //
         int who2move;
+        bool whoToMove = true;
         if (board.IsWhiteToMove)
         {
             who2move = -1;
         }
         else
         {
+            whoToMove = false;
             who2move = 1;
         }
 
@@ -42,7 +44,7 @@ public class MyBot : IChessBot
         int max = -999999999;
 
         // DEPTH EVEN NUMBERS ONLY
-        int depth = 4;
+        int depth = 2;
         int quiesceDepth = 2;
 
         Move[] moves = board.GetLegalMoves(false);
@@ -65,7 +67,8 @@ public class MyBot : IChessBot
             }
         }
         Console.WriteLine("Mine:");
-        Console.WriteLine(timer.MillisecondsElapsedThisTurn);
+        
+        Console.WriteLine(board.GetPieceBitboard(PieceType.Knight, whoToMove));
         return bestMove;
 
         int alphaBeta(int alpha, int beta, int depthleft)
@@ -129,6 +132,25 @@ public class MyBot : IChessBot
                     score += pieceValues[(int)piece.PieceType] * -1;
                 }
             }
+
+            //// Check and checkmate bonuses
+            //if (board.IsInCheck())
+            //{
+            //    score -= 60;
+            //}
+            //else if (board.IsInCheckmate())
+            //{
+            //    score -= 999999;
+            //}
+            //else
+            //{
+            //    // Other Bonuses
+            //    if (true)
+            //    {
+            //        
+            //        
+            //    }
+            //}
 
             return score * who2move;
         }
